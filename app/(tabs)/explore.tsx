@@ -1,112 +1,127 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+// app/(tabs)/explore.tsx
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import React, { useState } from 'react';
+import { SafeAreaView, StyleSheet, View, Text, TextInput, Button, ScrollView, Alert, Keyboard } from 'react-native';
+// Importamos novamente nossa instância do Supabase.
+import { supabase } from '../../lib/supabase';
+import { router } from 'expo-router';
 
-export default function TabTwoScreen() {
+export default function ProductManagementScreen() {
+  // Estados para cada campo do formulário. Cada um controla um TextInput.
+  const [productId, setProductId] = useState('');
+  const [title, setTitle] = useState('');
+  const [price, setPrice] = useState('');
+  const [description, setDescription] = useState('');
+  const [image, setImage] = useState('');
+
+  // Função utilitária para limpar todos os campos do formulário e fechar o teclado.
+  const clearForm = () => {
+    setProductId('');
+    setTitle('');
+    setPrice('');
+    setDescription('');
+    setImage('');
+    Keyboard.dismiss();
+  };
+
+  // Função para ADICIONAR um novo produto. Corresponde ao "INSERT".
+  const handleAddProduct = async () => {
+    // Validação simples para garantir que os campos não estão vazios.
+    if (!title || !price || !description || !image) {
+      Alert.alert('Atenção', 'Preencha todos os campos para adicionar um produto.');
+      return;
+    }
+    // Chamada ao Supabase para inserir um novo registro na tabela 'products'.
+    const { error } = await supabase.from('products').insert([
+      // O objeto passado deve ter chaves que correspondem aos nomes das colunas da tabela.
+      { title, price: parseFloat(price), description, category: 'app-add', image: image }
+    ]);
+    // Verificamos se houve erro e exibimos um alerta para o usuário.
+    if (error) Alert.alert('Erro', error.message);
+    else { Alert.alert('Sucesso', 'Produto adicionado!'); clearForm(); }
+  };
+
+  // Função para ATUALIZAR um produto existente. Corresponde ao "UPDATE".
+  const handleUpdateProduct = async () => {
+    if (!productId) { Alert.alert('Atenção', 'Insira o ID do produto para atualizar.'); return; }
+
+    // Objeto dinâmico para enviar apenas os campos que foram preenchidos para atualização.
+    const updateObject: { title?: string, price?: number, description?: string, image?: string } = {};
+    if (title) updateObject.title = title;
+    if (price) updateObject.price = parseFloat(price);
+    if (description) updateObject.description = description;
+    if (image) updateObject.image = image;
+    if (Object.keys(updateObject).length === 0) { Alert.alert('Atenção', 'Preencha pelo menos um campo para atualizar.'); return; }
+
+    // Chamada ao Supabase para atualizar um registro...
+    const { error } = await supabase
+      .from('products')
+      .update(updateObject) // ...passando os novos dados...
+      .eq('id', productId); // ...onde a coluna 'id' seja igual ao ID informado.
+
+    if (error) Alert.alert('Erro', error.message);
+    else { Alert.alert('Sucesso', 'Produto atualizado!'); clearForm(); }
+  };
+
+  // Função para DELETAR um produto. Corresponde ao "DELETE".
+  const handleDeleteProduct = async () => {
+    if (!productId) { Alert.alert('Atenção', 'Insira o ID do produto para deletar.'); return; }
+    // Chamada ao Supabase para deletar um registro...
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', productId); // ...onde a coluna 'id' seja igual ao ID informado.
+
+    if (error) Alert.alert('Erro', error.message);
+    else { Alert.alert('Sucesso', 'Produto deletado!'); clearForm(); }
+  };
+
+  function handleback(){
+    router.navigate("/")
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <Button
+        title='Index'
+        onPress={handleback}
+      />
+      {/* ScrollView permite que o formulário role em telas menores,
+          especialmente com o teclado aberto. */}
+      {/* keyboardShouldPersistTaps="handled"
+          permite clicar em botões enquanto o teclado está aberto. */}
+      <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
+        <Text style={styles.header}>Gerenciar Produtos</Text>
+        {/* Cada TextInput está ligado a uma variável de estado e a sua função de atualização. */}
+        <TextInput style={styles.input} placeholder="ID do Produto (para Editar/Deletar)"
+          value={productId} onChangeText={setProductId} keyboardType="numeric" />
+        <TextInput style={styles.input} placeholder="Título do Produto"
+          value={title} onChangeText={setTitle} />
+        <TextInput style={styles.input} placeholder="Preço" value={price} onChangeText={setPrice}
+          keyboardType="numeric" />
+        <TextInput style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+          placeholder="Descrição" value={description} onChangeText={setDescription} multiline />
+        <TextInput style={styles.input} placeholder="URL da Imagem do Produto"
+          value={image} onChangeText={setImage} keyboardType="url" autoCapitalize="none" />
+        <View style={styles.buttonContainer}>
+          {/* Cada botão chama a função de manipulação de dados correspondente. */}
+          <Button title="Adicionar Produto (INSERT)" onPress={handleAddProduct} />
+          <Button title="Atualizar Produto (UPDATE)" onPress={handleUpdateProduct}
+            color="#ff8c00" />
+          <Button title="Deletar Produto (DELETE)" onPress={handleDeleteProduct}
+            color="#dc3545" />
+          <Button title="Limpar Formulário" onPress={clearForm} color="gray" />
+        </View>
+      </ScrollView>
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  form: { padding: 20, flexGrow: 1 },
+  header: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  input: { backgroundColor: '#fff', paddingHorizontal: 15, paddingVertical: 10,
+    borderRadius: 5, marginBottom: 15, borderWidth: 1, borderColor: '#ddd' },
+  buttonContainer: { marginTop: 10, gap: 10 },
 });

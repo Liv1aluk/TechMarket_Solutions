@@ -1,98 +1,269 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { 
+  StyleSheet, 
+  View, 
+  Text, 
+  TextInput, 
+  Alert, 
+  TouchableOpacity, 
+  KeyboardAvoidingView, 
+  Platform,
+  Image
+} from 'react-native';
+import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons'; // Ícones para dar acabamento
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function LoginScreen() {
+  const [password, setPassword] = useState('');
 
-export default function HomeScreen() {
+  // --- LÓGICA DE NAVEGAÇÃO ---
+
+  const handleLogin = () => {
+    if (password === '1234') {
+      router.push('/estoque'); // Vai para Admin
+      setPassword(''); 
+    } else {
+      Alert.alert("Acesso Negado", "Senha de gerente incorreta.");
+    }
+  };
+
+  const handleClientAccess = () => {
+    router.push('/vitrine'); // Vai para Cliente
+  };
+
+  // --- RENDERIZAÇÃO ---
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      {/* Círculos decorativos de fundo (Design Moderno) */}
+      <View style={styles.circleTop} />
+      <View style={styles.circleBottom} />
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <View style={styles.contentContainer}>
+        
+        {/* CABEÇALHO */}
+        <View style={styles.header}>
+          <View style={styles.iconContainer}>
+            <Ionicons name="pricetags" size={40} color="#D32F2F" />
+          </View>
+          <Text style={styles.title}>TechMarket</Text>
+          <Text style={styles.subtitle}>Kiosk Solutions</Text>
+        </View>
+
+        {/* CARTÃO PRINCIPAL */}
+        <View style={styles.card}>
+          
+          {/* --- OPÇÃO CLIENTE (Destaque Pêssego) --- */}
+          <TouchableOpacity 
+            style={styles.clientButton} 
+            onPress={handleClientAccess}
+            activeOpacity={0.8}
+          >
+            <View style={styles.clientIconBg}>
+              <Ionicons name="cart-outline" size={24} color="#D32F2F" />
+            </View>
+            <View>
+              <Text style={styles.clientTitle}>Sou Cliente</Text>
+              <Text style={styles.clientSubtitle}>Toque para ver a vitrine</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color="#D32F2F" style={{ marginLeft: 'auto' }} />
+          </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <Text style={styles.dividerText}>ÁREA RESTRITA</Text>
+          </View>
+
+          {/* --- OPÇÃO GERENTE (Estilo Minimalista) --- */}
+          <View style={styles.adminSection}>
+            <Text style={styles.label}>Acesso Gerente</Text>
+            
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" size={20} color="#999" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Digite a senha (1234)"
+                placeholderTextColor="#aaa"
+                secureTextEntry={true}
+                keyboardType="numeric"
+                value={password}
+                onChangeText={setPassword}
+              />
+            </View>
+
+            <TouchableOpacity 
+              style={styles.loginButton} 
+              onPress={handleLogin}
+            >
+              <Text style={styles.loginButtonText}>Entrar no Painel</Text>
+            </TouchableOpacity>
+          </View>
+
+        </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
+// --- ESTILOS (Paleta: Creme, Pêssego, Vermelho) ---
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#FFF8F5', // Creme fundo base
+    justifyContent: 'center',
+  },
+  // Elementos Decorativos de Fundo
+  circleTop: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: '#FFAD99', // Pêssego
+    opacity: 0.2,
+  },
+  circleBottom: {
+    position: 'absolute',
+    bottom: -100,
+    left: -50,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: '#D32F2F', // Vermelho
+    opacity: 0.05,
+  },
+  
+  contentContainer: {
+    padding: 24,
+    zIndex: 1,
+  },
+
+  // Cabeçalho
+  header: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  iconContainer: {
+    backgroundColor: '#FFEBE5', // Creme mais escuro/rosado
+    padding: 15,
+    borderRadius: 20,
+    marginBottom: 15,
+  },
+  title: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: '#D32F2F', // Vermelho Tech
+    letterSpacing: -1,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#888',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    marginTop: 5,
+  },
+
+  // Cartão Central
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    // Sombra sofisticada
+    shadowColor: '#D32F2F',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+
+  // Botão Cliente (Estilo Cartão)
+  clientButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: '#FFF0ED', // Pêssego bem claro
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#FFDAC6', // Borda Pêssego
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  clientIconBg: {
+    backgroundColor: '#FFFFFF',
+    padding: 10,
+    borderRadius: 12,
+    marginRight: 15,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  clientTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+  },
+  clientSubtitle: {
+    fontSize: 13,
+    color: '#D32F2F', // Texto vermelho suave
+  },
+
+  // Divisor
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  dividerText: {
+    fontSize: 10,
+    color: '#aaa',
+    fontWeight: 'bold',
+    letterSpacing: 1,
+    textAlign: 'center',
+    width: '100%',
+  },
+
+  // Área Admin
+  adminSection: {
+    gap: 12,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#555',
+    marginLeft: 4,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FAFAFA',
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 50,
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+  loginButton: {
+    backgroundColor: '#D32F2F', // Vermelho forte
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+    shadowColor: '#D32F2F',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  loginButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
